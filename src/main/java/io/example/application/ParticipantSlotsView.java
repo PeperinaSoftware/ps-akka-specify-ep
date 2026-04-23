@@ -22,8 +22,15 @@ public class ParticipantSlotsView extends View {
     public static class ParticipantSlotsViewUpdater extends TableUpdater<SlotRow> {
 
         public Effect<SlotRow> onEvent(ParticipantSlotEntity.Event event) {
-            // Supply your own implementation
-            return effects().ignore();
+            return switch (event) {
+                case MarkedAvailable e -> effects().updateRow(
+                        new SlotRow(e.slotId(), e.participantId(), e.participantType().name(), null, "available"));
+                case UnmarkedAvailable e -> effects().deleteRow();
+                case Booked e -> effects().updateRow(
+                        new SlotRow(e.slotId(), e.participantId(), e.participantType().name(), e.bookingId(), "booked"));
+                case Canceled e -> effects().updateRow(
+                        new SlotRow(e.slotId(), e.participantId(), e.participantType().name(), e.bookingId(), "canceled"));
+            };
         }
     }
 
@@ -41,12 +48,12 @@ public class ParticipantSlotsView extends View {
     public record SlotList(List<SlotRow> slots) {
     }
 
-    // @Query("SELECT .... ")
+    @Query("SELECT * AS slots FROM participant_slots_view WHERE participantId = :participantId")
     public QueryEffect<SlotList> getSlotsByParticipant(String participantId) {
         return queryResult();
     }
 
-    // @Query("SELECT ...")
+    @Query("SELECT * AS slots FROM participant_slots_view WHERE participantId = :participantId AND status = :status")
     public QueryEffect<SlotList> getSlotsByParticipantAndStatus(ParticipantStatusInput input) {
         return queryResult();
     }

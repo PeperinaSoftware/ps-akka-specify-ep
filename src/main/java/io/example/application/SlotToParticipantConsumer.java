@@ -23,7 +23,36 @@ public class SlotToParticipantConsumer extends Consumer {
     }
 
     public Effect onEvent(BookingEvent event) {
-        // Supply your own implementation
+        switch (event) {
+            case BookingEvent.ParticipantMarkedAvailable evt -> {
+                logger.info("Marking available {} for participant {}", evt.slotId(), evt.participantId());
+                client.forEventSourcedEntity(participantSlotId(evt))
+                        .method(ParticipantSlotEntity::markAvailable)
+                        .invoke(new ParticipantSlotEntity.Commands.MarkAvailable(
+                                evt.slotId(), evt.participantId(), evt.participantType()));
+            }
+            case BookingEvent.ParticipantUnmarkedAvailable evt -> {
+                logger.info("Unmarking available {} for participant {}", evt.slotId(), evt.participantId());
+                client.forEventSourcedEntity(participantSlotId(evt))
+                        .method(ParticipantSlotEntity::unmarkAvailable)
+                        .invoke(new ParticipantSlotEntity.Commands.UnmarkAvailable(
+                                evt.slotId(), evt.participantId(), evt.participantType()));
+            }
+            case BookingEvent.ParticipantBooked evt -> {
+                logger.info("Booking {} for participant {}", evt.slotId(), evt.participantId());
+                client.forEventSourcedEntity(participantSlotId(evt))
+                        .method(ParticipantSlotEntity::book)
+                        .invoke(new ParticipantSlotEntity.Commands.Book(
+                                evt.slotId(), evt.participantId(), evt.participantType(), evt.bookingId()));
+            }
+            case BookingEvent.ParticipantCanceled evt -> {
+                logger.info("Canceling booking {} for participant {}", evt.bookingId(), evt.participantId());
+                client.forEventSourcedEntity(participantSlotId(evt))
+                        .method(ParticipantSlotEntity::cancel)
+                        .invoke(new ParticipantSlotEntity.Commands.Cancel(
+                                evt.slotId(), evt.participantId(), evt.participantType(), evt.bookingId()));
+            }
+        }
         return effects().done();
     }
 
