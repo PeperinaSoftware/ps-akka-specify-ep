@@ -10,6 +10,7 @@ import io.example.application.ParticipantSlotEntity.Event.Canceled;
 import io.example.application.ParticipantSlotEntity.Event.MarkedAvailable;
 import io.example.application.ParticipantSlotEntity.Event.UnmarkedAvailable;
 import java.util.List;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,12 +25,12 @@ public class ParticipantSlotsView extends View {
         public Effect<SlotRow> onEvent(ParticipantSlotEntity.Event event) {
             return switch (event) {
                 case MarkedAvailable e -> effects().updateRow(
-                        new SlotRow(e.slotId(), e.participantId(), e.participantType().name(), null, "available"));
+                        new SlotRow(e.slotId(), e.participantId(), e.participantType().name(), Optional.empty(), "available"));
                 case UnmarkedAvailable e -> effects().deleteRow();
                 case Booked e -> effects().updateRow(
-                        new SlotRow(e.slotId(), e.participantId(), e.participantType().name(), e.bookingId(), "booked"));
+                        new SlotRow(e.slotId(), e.participantId(), e.participantType().name(), Optional.of(e.bookingId()), "booked"));
                 case Canceled e -> effects().updateRow(
-                        new SlotRow(e.slotId(), e.participantId(), e.participantType().name(), e.bookingId(), "canceled"));
+                        new SlotRow(e.slotId(), e.participantId(), e.participantType().name(), Optional.of(e.bookingId()), "canceled"));
             };
         }
     }
@@ -38,7 +39,7 @@ public class ParticipantSlotsView extends View {
             String slotId,
             String participantId,
             String participantType,
-            String bookingId,
+            Optional<String> bookingId,
             String status) {
     }
 
